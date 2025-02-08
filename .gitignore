@@ -5,18 +5,18 @@ package-lock.json
 # Environment variables
 .env
 
-# Uploads content
-/uploads/componentes/*
-/uploads/comprobantes/*
-/uploads/users/*
+# First, explicitly track the uploads folder and its structure
+!uploads/
+!uploads/componentes/
+!uploads/comprobantes/
+!uploads/users/
 
-# Keep uploads folder and subfolders structure
-!/uploads
-!/uploads/componentes
-!/uploads/comprobantes
-!/uploads/users
+# Then ignore all contents inside these folders
+uploads/componentes/*
+uploads/comprobantes/*
+uploads/users/*
 
-# Keep .gitkeep files
-!/uploads/componentes/.gitkeep
-!/uploads/comprobantes/.gitkeep
-!/uploads/users/.gitkeep
+# Finally, make exceptions for .gitkeep files
+!uploads/componentes/.gitkeep
+!uploads/comprobantes/.gitkeep
+!uploads/users/.gitkeep
