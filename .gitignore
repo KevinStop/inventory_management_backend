@@ -6,11 +6,17 @@ package-lock.json
 .env
 
 # Uploads content
-uploads/componentes/*
-uploads/comprobantes/*
-uploads/users/*
+/uploads/componentes/*
+/uploads/comprobantes/*
+/uploads/users/*
 
-# Keep folders structure but ignore content
-!uploads/componentes/.gitkeep
-!uploads/comprobantes/.gitkeep
-!uploads/users/.gitkeep
+# Keep uploads folder and subfolders structure
+!/uploads
+!/uploads/componentes
+!/uploads/comprobantes
+!/uploads/users
+
+# Keep .gitkeep files
+!/uploads/componentes/.gitkeep
+!/uploads/comprobantes/.gitkeep
+!/uploads/users/.gitkeep
