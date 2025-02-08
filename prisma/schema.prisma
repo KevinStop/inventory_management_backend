@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId         Int             @id @default(autoincrement()) @map("user_id")
+  googleId       String?         @unique @db.VarChar(255) @map("google_id")
+  name           String          @db.VarChar(255)
+  lastName       String          @db.VarChar(255) @map("last_name")
+  email          String          @unique @db.VarChar(255)
+  password       String?         @db.VarChar(255)
+  role           Role            @default(user)
+  isActive       Boolean         @default(true) @map("is_active")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  imageUrl       String?         @db.VarChar(255) @map("image_url")
+
+  requests       Request[]
+  loanHistories  LoanHistory[]
+}
+
+enum Role {
+  admin
+  user
+}
+
+model Component {
+  id                Int                @id @default(autoincrement())
+  name              String             @db.VarChar(255)
+  quantity          Int
+  description       String?            @db.Text
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  imageUrl          String?
+  categoryId        Int
+
+  category          Category           @relation(fields: [categoryId], references: [id])
+  requestDetails    RequestDetail[]
+  loanHistories     LoanHistory[]
+  componentMovements ComponentMovement[]
+  
+}
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  components  Component[]
+}
+
+model Request {
+  requestId           Int                 @id @default(autoincrement()) @map("request_id")
+  userId              Int                 @map("user_id")
+  typeRequest         String             
+  status              RequestStatus       @default(pendiente)
+  returnDate          DateTime?
+  responsible         String?
+  description         String?
+  adminNotes          String?
+  fileUrl             String?             @db.VarChar(255)
+  isActive            Boolean             @default(true) @map("is_active")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  user                User                @relation(fields: [userId], references: [userId])
+  requestDetails      RequestDetail[]
+  loanHistories       LoanHistory[]
+  relatedPeriods      RequestPeriod[]     @relation("RequestPeriods")
+}
+
+
+enum RequestStatus {
+  pendiente
+  prestamo
+  finalizado
+  no_devuelto
+}
+
+model RequestDetail {
+  requestDetailId Int        @id @default(autoincrement()) @map("request_detail_id")
+  requestId       Int        @map("request_id")
+  componentId     Int        @map("component_id")
+  quantity        Int
+
+  request         Request       @relation(fields: [requestId], references: [requestId])
+  component       Component     @relation(fields: [componentId], references: [id])
+}
+
+model ComponentMovement {
+  movementId      Int            @id @default(autoincrement()) @map("movement_id")
+  componentId     Int            @map("component_id")
+  quantity        Int            // Positivo para ingreso, negativo para egreso
+  reason          String         @db.VarChar(255) // Razón del movimiento
+  movementType    MovementType   @default(ingreso)
+  movementDate    DateTime       @default(now()) @map("movement_date")
+  academicPeriodId Int?
+
+  component       Component      @relation(fields: [componentId], references: [id])
+  academicPeriod  AcademicPeriod? @relation(fields: [academicPeriodId], references: [id])
+}
+
+enum MovementType {
+  ingreso
+  egreso
+}
+
+model AcademicPeriod {
+  id                  Int                 @id @default(autoincrement())
+  name                String              @unique @db.VarChar(255) // Ejemplo: "2024-1"
+  startDate           DateTime
+  endDate             DateTime
+  isActive            Boolean             @default(false) // Indica si el periodo está activo
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  requestPeriods      RequestPeriod[]    // Relación con RequestPeriod
+  componentMovements  ComponentMovement[]
+}
+
+model RequestPeriod {
+  id                  Int                 @id @default(autoincrement())
+  requestId           Int                 @map("request_id")
+  academicPeriodId    Int                 @map("academic_period_id")
+  typeDate            String
+  requestPeriodDate   DateTime?
+
+  request             Request             @relation(fields: [requestId], references: [requestId], name: "RequestPeriods")
+  academicPeriod      AcademicPeriod      @relation(fields: [academicPeriodId], references: [id])
+}
+
+model LoanHistory {
+  loanId          Int          @id @default(autoincrement()) @map("loan_id")
+  requestId       Int          @map("request_id")
+  userId          Int          @map("user_id")
+  componentId     Int          @map("component_id")
+  startDate       DateTime     @map("start_date")
+  endDate         DateTime?
+  status          LoanStatus   @default(devuelto)
+  wasReturned Boolean @default(true)  // false indica que fue "no devuelto"
+  finalStatus String? // 'devuelto_normal', 'no_devuelto', etc.
+  statusHistory Json? // Para guardar el historial de cambios
+
+  request         Request      @relation(fields: [requestId], references: [requestId])
+  user            User         @relation(fields: [userId], references: [userId])
+  component       Component    @relation(fields: [componentId], references: [id])
+
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+}
+
+enum LoanStatus {
+  devuelto
+  no_devuelto
+}
